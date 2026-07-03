@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars and fill in your Okta org.
+# The issuer must be a custom authorization server (org-server tokens are opaque).
+okta_issuer   = "https://your-org.okta.com/oauth2/default"
+okta_audience = "api://default"

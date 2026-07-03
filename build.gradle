@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.amazonaws:aws-lambda-java-core:1.2.3'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+    implementation 'com.okta.jwt:okta-jwt-verifier:0.5.12'
+    runtimeOnly 'com.okta.jwt:okta-jwt-verifier-impl:0.5.12'
+    runtimeOnly 'org.slf4j:slf4j-nop:2.0.13'
+}
+
+compileJava {
+    options.release = 21
+}
+
+// Lambda deployment package: compiled classes at the root, dependencies under lib/
+tasks.register('buildZip', Zip) {
+    archiveFileName = 'okta-app-lambda.zip'
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+    from compileJava
+    from processResources
+    exclude 'previous-compilation-data.bin'
+    into('lib') {
+        from configurations.runtimeClasspath
+    }
+}
+
+build.dependsOn buildZip
