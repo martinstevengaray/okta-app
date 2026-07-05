@@ -25,3 +25,22 @@ variable "okta_audience" {
   type        = string
   default     = "api://default"
 }
+
+variable "cors_allow_origins" {
+  description = "Origins allowed to call the function URL from a browser"
+  type        = list(string)
+  default     = ["http://localhost:8080"]
+}
+
+variable "okta_client_id" {
+  description = "Client ID of the Okta Web Application app used for the browser OIDC flow (empty disables it)"
+  type        = string
+  default     = ""
+}
+
+variable "okta_client_secret" {
+  description = "Client secret of the Okta Web Application app used for the browser OIDC flow"
+  type        = string
+  default     = ""
+  sensitive   = true
+}

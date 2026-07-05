@@ -38,8 +38,10 @@ resource "aws_lambda_function" "this" {
 
   environment {
     variables = {
-      OKTA_ISSUER   = var.okta_issuer
-      OKTA_AUDIENCE = var.okta_audience
+      OKTA_ISSUER        = var.okta_issuer
+      OKTA_AUDIENCE      = var.okta_audience
+      OKTA_CLIENT_ID     = var.okta_client_id
+      OKTA_CLIENT_SECRET = var.okta_client_secret
     }
   }
 }
@@ -47,6 +49,13 @@ resource "aws_lambda_function" "this" {
 resource "aws_lambda_function_url" "this" {
   function_name      = aws_lambda_function.this.function_name
   authorization_type = "NONE"
+
+  cors {
+    allow_origins = var.cors_allow_origins
+    allow_methods = ["*"]
+    allow_headers = ["authorization", "content-type"]
+    max_age       = 3600
+  }
 }
 
 resource "aws_lambda_permission" "public_url" {
