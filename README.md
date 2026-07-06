@@ -46,8 +46,8 @@ your raw org values:
 
 ```sh
 export OKTA_URL_PREFIX="<org>"            # e.g. integrator-1234567
-export CLIENT_ID="<client id>"            # API Services app (client-credentials, client-curl.sh)
-export CLIENT_SECRET="<client secret>"
+export API_CLIENT_ID="<client id>"        # API Services app (client-credentials, client-curl.sh)
+export API_CLIENT_SECRET="<client secret>"
 export WEB_CLIENT_ID="<client id>"        # Web Application app (browser OIDC flow;
 export WEB_CLIENT_SECRET="<client secret>"  # empty/unset deploys with the flow disabled)
 export AWS_ACCOUNT_ID="<account id>"      # names the tfstate-<account id> state bucket
