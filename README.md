@@ -22,8 +22,9 @@ signature, `iss`/`aud`/`exp` checks); anything else gets a `401`.
    **Authorization Code**, set the sign-in redirect URI to
    `https://<function-url>/callback`, and assign your users/groups to the app. Note its
    client ID/secret.
-4. Make sure the scope the Lambda requests (`SCOPES` in `OktaAppLambda.java`) exists as a
-   custom scope on the authorization server, and that its access policies allow both apps.
+4. Make sure the scope the Lambda requests (the `okta_scopes` Terraform variable, fed from
+   `OKTA_SCOPES` in `local/export_variables.sh`) exists as a custom scope on the authorization
+   server, and that its access policies allow both apps.
 5. The default audience of the `default` server is `api://default`; if yours differs, set
    `okta_audience` accordingly.
 
@@ -46,10 +47,11 @@ your raw org values:
 
 ```sh
 export OKTA_URL_PREFIX="<org>"            # e.g. integrator-1234567
-export API_CLIENT_ID="<client id>"        # API Services app (client-credentials, client-curl.sh)
-export API_CLIENT_SECRET="<client secret>"
-export WEB_CLIENT_ID="<client id>"        # Web Application app (browser OIDC flow;
-export WEB_CLIENT_SECRET="<client secret>"  # empty/unset deploys with the flow disabled)
+export OKTA_API_CLIENT_ID="<client id>"     # API Services app (client-credentials, client-curl.sh)
+export OKTA_API_CLIENT_SECRET="<client secret>"
+export OKTA_WEB_CLIENT_ID="<client id>"     # Web Application app (browser OIDC flow;
+export OKTA_WEB_CLIENT_SECRET="<client secret>"  # empty/unset deploys with the flow disabled)
+export OKTA_SCOPES="<scope>"                # custom scope both flows request (see Okta setup)
 export AWS_ACCOUNT_ID="<account id>"      # names the tfstate-<account id> state bucket
 ```
 

@@ -1,5 +1,5 @@
 provider "aws" {
-  region = var.region
+  region = var.aws_region
 }
 
 locals {
@@ -7,7 +7,7 @@ locals {
 }
 
 resource "aws_iam_role" "lambda" {
-  name = "${var.function_name}-role"
+  name = "${var.aws_lambda_function_name}-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -25,7 +25,7 @@ resource "aws_iam_role_policy_attachment" "basic_execution" {
 }
 
 resource "aws_lambda_function" "this" {
-  function_name = var.function_name
+  function_name = var.aws_lambda_function_name
   role          = aws_iam_role.lambda.arn
   runtime       = "java21"
   handler       = "com.example.oktaapp.OktaAppLambda::handleRequest"
@@ -38,10 +38,11 @@ resource "aws_lambda_function" "this" {
 
   environment {
     variables = {
-      OKTA_ISSUER        = var.okta_issuer
-      OKTA_AUDIENCE      = var.okta_audience
-      OKTA_CLIENT_ID     = var.okta_client_id
-      OKTA_CLIENT_SECRET = var.okta_client_secret
+      OKTA_ISSUER            = var.okta_issuer
+      OKTA_AUDIENCE          = var.okta_audience
+      OKTA_WEB_CLIENT_ID     = var.okta_web_client_id
+      OKTA_WEB_CLIENT_SECRET = var.okta_web_client_secret
+      OKTA_SCOPES            = var.okta_scopes
     }
   }
 }
@@ -51,7 +52,7 @@ resource "aws_lambda_function_url" "this" {
   authorization_type = "NONE"
 
   cors {
-    allow_origins = var.cors_allow_origins
+    allow_origins = var.aws_lambda_cors_allow_origins
     allow_methods = ["*"]
     allow_headers = ["authorization", "content-type"]
     max_age       = 3600

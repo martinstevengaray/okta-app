@@ -31,9 +31,10 @@ import java.util.Map;
  *  - Browsers (Accept: text/html) without a token are sent through the
  *    OIDC authorization-code flow: redirect to Okta, exchange the code
  *    at /callback, and store the access token in an HttpOnly session
- *    cookie. Requires OKTA_CLIENT_ID / OKTA_CLIENT_SECRET of a
+ *    cookie. Requires OKTA_WEB_CLIENT_ID / OKTA_WEB_CLIENT_SECRET of a
  *    "Web Application" Okta app whose sign-in redirect URI is
- *    https://<function-url>/callback.
+ *    https://<function-url>/callback, and OKTA_SCOPES with the
+ *    space-separated scopes to request.
  *
  * OKTA_ISSUER must be a custom authorization server (e.g.
  * https://org.okta.com/oauth2/default) — org authorization server
@@ -45,9 +46,9 @@ public class OktaAppLambda implements RequestHandler<Map<String, Object>, Map<St
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private static final String ISSUER = System.getenv("OKTA_ISSUER");
-    private static final String CLIENT_ID = System.getenv("OKTA_CLIENT_ID");
-    private static final String CLIENT_SECRET = System.getenv("OKTA_CLIENT_SECRET");
-    private static final String SCOPES = "okta-lambda-client-scope";
+    private static final String CLIENT_ID = System.getenv("OKTA_WEB_CLIENT_ID");
+    private static final String CLIENT_SECRET = System.getenv("OKTA_WEB_CLIENT_SECRET");
+    private static final String SCOPES = System.getenv("OKTA_SCOPES");
 
     private static final String TOKEN_COOKIE = "okta_token";
     private static final String STATE_COOKIE = "oauth_state";
@@ -203,7 +204,8 @@ public class OktaAppLambda implements RequestHandler<Map<String, Object>, Map<St
 
     private static boolean oidcConfigured() {
         return CLIENT_ID != null && !CLIENT_ID.isEmpty()
-                && CLIENT_SECRET != null && !CLIENT_SECRET.isEmpty();
+                && CLIENT_SECRET != null && !CLIENT_SECRET.isEmpty()
+                && SCOPES != null && !SCOPES.isEmpty();
     }
 
     private static String redirectUri(Map<String, Object> event) {

@@ -3,13 +3,13 @@ variable "app_version" {
   type        = string
 }
 
-variable "region" {
+variable "aws_region" {
   description = "AWS region to deploy into"
   type        = string
   default     = "us-west-2"
 }
 
-variable "function_name" {
+variable "aws_lambda_function_name" {
   description = "Name of the Lambda function"
   type        = string
   default     = "okta-app-lambda"
@@ -26,19 +26,25 @@ variable "okta_audience" {
   default     = "api://default"
 }
 
-variable "cors_allow_origins" {
+variable "aws_lambda_cors_allow_origins" {
   description = "Origins allowed to call the function URL from a browser"
   type        = list(string)
   default     = ["http://localhost:8080"]
 }
 
-variable "okta_client_id" {
+variable "okta_web_client_id" {
   description = "Client ID of the Okta Web Application app used for the browser OIDC flow (empty disables it)"
   type        = string
   default     = ""
 }
 
-variable "okta_client_secret" {
+variable "okta_scopes" {
+  description = "Space-separated scopes the browser OIDC flow requests (must exist as custom scopes on the authorization server; empty disables the flow)"
+  type        = string
+  default     = ""
+}
+
+variable "okta_web_client_secret" {
   description = "Client secret of the Okta Web Application app used for the browser OIDC flow"
   type        = string
   default     = ""
