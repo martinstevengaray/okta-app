@@ -41,17 +41,18 @@ exchange.
 ## Project layout
 
 ```
-src/main/java/com/example/oktaapp/
-  OktaAppLambda.java       Handler entry point: wires config, echoes authenticated requests
-  OktaDelegate.java        Token verification + OIDC authorization-code flow
-  AwsServicesDelegate.java Reads the web client secret from SSM Parameter Store
-  HttpUtils.java           Function-URL response builders, HTML error page, URL encoding
-  JsonUtils.java           Jackson helpers (serialize, nested-field lookup)
-terraform/                 IAM role, Lambda, public Function URL, SSM parameter, S3 backend
-deploy.sh                  Build the zip and apply Terraform
-deploy_secrets.sh          Push the web client secret into SSM Parameter Store
-client-curl.sh             Fetch a client-credentials token and call the function
-local/                     Gitignored; holds your org- and account-specific values
+src/main/java/com/mgaray/oktaapp/
+  OktaAppLambda.java           Handler entry point: wires config, echoes authenticated requests
+  OktaDelegate.java            Token verification + OIDC authorization-code flow
+  common/
+    AwsServicesDelegate.java   Reads the web client secret from SSM Parameter Store
+    HttpUtils.java             Function-URL response builders, HTML error page, URL encoding
+    JsonUtils.java             Jackson helpers (serialize, nested-field lookup)
+terraform/                     IAM role, Lambda, public Function URL, SSM parameter, S3 backend
+deploy.sh                      Build the zip and apply Terraform
+deploy_secrets.sh              Push the web client secret into SSM Parameter Store
+client-curl.sh                 Fetch a client-credentials token and call the function
+local/                         Gitignored; holds your org- and account-specific values
 ```
 
 Terraform state lives in `s3://tfstate-<account id>/okta-app-lambda/terraform.tfstate`.
