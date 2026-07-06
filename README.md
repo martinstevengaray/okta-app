@@ -35,17 +35,19 @@ The version is defined once in `build.gradle` and readable by tooling via
 ## Deploy
 
 One-time setup: create `local/export_variables.sh` (the `local/` directory is
-gitignored, so account- and org-specific values never land in the repo). It is
-sourced by `deploy.sh`, and Terraform reads any `TF_VAR_<name>` env var as the
-input variable `<name>`:
+gitignored, so account- and org-specific values never land in the repo) with
+your raw org values:
 
 ```sh
-export OKTA_URL_PREFIX="<org>"                 # e.g. integrator-1234567
-export AWS_ACCOUNT_ID="<account id>"           # names the tfstate-<account id> state bucket
-export TF_VAR_okta_issuer="https://${OKTA_URL_PREFIX}.okta.com/oauth2/default"
-export TF_VAR_okta_client_id="<client id>"     # optional: browser OIDC flow
-export TF_VAR_okta_client_secret="<client secret>"
+export OKTA_URL_PREFIX="<org>"           # e.g. integrator-1234567
+export CLIENT_ID="<client id>"           # Okta Web Application app (browser OIDC flow)
+export CLIENT_SECRET="<client secret>"
+export AWS_ACCOUNT_ID="<account id>"     # names the tfstate-<account id> state bucket
 ```
+
+`deploy.sh` sources this file and derives the Terraform inputs from it, exported
+as `TF_VAR_*` env vars (Terraform reads any `TF_VAR_<name>` env var as the input
+variable `<name>`).
 
 (A `terraform/terraform.tfvars` file is an optional alternative — see
 `terraform.tfvars.example` — but note tfvars values take precedence over
