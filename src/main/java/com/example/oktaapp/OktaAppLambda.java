@@ -31,10 +31,11 @@ import java.util.Map;
  *  - Browsers (Accept: text/html) without a token are sent through the
  *    OIDC authorization-code flow: redirect to Okta, exchange the code
  *    at /callback, and store the access token in an HttpOnly session
- *    cookie. Requires OKTA_WEB_CLIENT_ID / OKTA_WEB_CLIENT_SECRET of a
- *    "Web Application" Okta app whose sign-in redirect URI is
- *    https://<function-url>/callback, and OKTA_SCOPES with the
- *    space-separated scopes to request.
+ *    cookie. Requires OKTA_WEB_CLIENT_ID of a "Web Application" Okta app
+ *    whose sign-in redirect URI is https://<function-url>/callback,
+ *    OKTA_WEB_CLIENT_SECRET_PARAM naming the SSM parameter holding its
+ *    client secret, and OKTA_SCOPES with the space-separated scopes to
+ *    request.
  *
  * OKTA_ISSUER must be a custom authorization server (e.g.
  * https://org.okta.com/oauth2/default) — org authorization server
@@ -47,7 +48,7 @@ public class OktaAppLambda implements RequestHandler<Map<String, Object>, Map<St
 
     private static final String ISSUER = System.getenv("OKTA_ISSUER");
     private static final String CLIENT_ID = System.getenv("OKTA_WEB_CLIENT_ID");
-    private static final String CLIENT_SECRET = System.getenv("OKTA_WEB_CLIENT_SECRET");
+    private static final String CLIENT_SECRET_PARAM = System.getenv("OKTA_WEB_CLIENT_SECRET_PARAM");
     private static final String SCOPES = System.getenv("OKTA_SCOPES");
 
     private static final String TOKEN_COOKIE = "okta_token";
@@ -166,7 +167,7 @@ public class OktaAppLambda implements RequestHandler<Map<String, Object>, Map<St
             HttpRequest request = HttpRequest.newBuilder(URI.create(ISSUER + "/v1/token"))
                     .header("content-type", "application/x-www-form-urlencoded")
                     .header("authorization", "Basic " + Base64.getEncoder().encodeToString(
-                            (CLIENT_ID + ":" + CLIENT_SECRET).getBytes(StandardCharsets.UTF_8)))
+                            (CLIENT_ID + ":" + clientSecret()).getBytes(StandardCharsets.UTF_8)))
                     .POST(HttpRequest.BodyPublishers.ofString(
                             "grant_type=authorization_code"
                                     + "&code=" + urlEncode(code)
@@ -204,8 +205,29 @@ public class OktaAppLambda implements RequestHandler<Map<String, Object>, Map<St
 
     private static boolean oidcConfigured() {
         return CLIENT_ID != null && !CLIENT_ID.isEmpty()
-                && CLIENT_SECRET != null && !CLIENT_SECRET.isEmpty()
+                && CLIENT_SECRET_PARAM != null && !CLIENT_SECRET_PARAM.isEmpty()
                 && SCOPES != null && !SCOPES.isEmpty();
+    }
+
+    /**
+     * The web app's client secret, from SSM Parameter Store via the AWS
+     * Parameters and Secrets Lambda Extension (localhost HTTP, no SDK).
+     * The extension caches reads (default TTL 5 min), so a rotated secret
+     * propagates without a redeploy. It only serves requests during
+     * invocations — do not call this from static initialization.
+     */
+    private static String clientSecret() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(
+                "http://localhost:2773/systemsmanager/parameters/get"
+                        + "?withDecryption=true&name=" + urlEncode(CLIENT_SECRET_PARAM)))
+                .header("X-Aws-Parameters-Secrets-Token", System.getenv("AWS_SESSION_TOKEN"))
+                .build();
+        HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            throw new IllegalStateException("reading " + CLIENT_SECRET_PARAM
+                    + " from parameter store failed: HTTP " + response.statusCode());
+        }
+        return MAPPER.readTree(response.body()).path("Parameter").path("Value").asText();
     }
 
     private static String redirectUri(Map<String, Object> event) {

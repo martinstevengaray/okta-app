@@ -43,10 +43,3 @@ variable "okta_scopes" {
   type        = string
   default     = ""
 }
-
-variable "okta_web_client_secret" {
-  description = "Client secret of the Okta Web Application app used for the browser OIDC flow"
-  type        = string
-  default     = ""
-  sensitive   = true
-}

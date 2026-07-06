@@ -50,7 +50,8 @@ export OKTA_URL_PREFIX="<org>"            # e.g. integrator-1234567
 export OKTA_API_CLIENT_ID="<client id>"     # API Services app (client-credentials, client-curl.sh)
 export OKTA_API_CLIENT_SECRET="<client secret>"
 export OKTA_WEB_CLIENT_ID="<client id>"     # Web Application app (browser OIDC flow;
-export OKTA_WEB_CLIENT_SECRET="<client secret>"  # empty/unset deploys with the flow disabled)
+                                            # empty/unset deploys with the flow disabled)
+export OKTA_WEB_CLIENT_SECRET="<client secret>"  # NOT read by terraform — goes to SSM, see below
 export OKTA_SCOPES="<scope>"                # custom scope both flows request (see Okta setup)
 export AWS_ACCOUNT_ID="<account id>"      # names the tfstate-<account id> state bucket
 ```
@@ -76,6 +77,25 @@ Then build and deploy in one step (extra args are passed to `terraform apply`):
 ```
 
 Outputs include `function_url`.
+
+### Web client secret (SSM Parameter Store)
+
+The web app's client secret is deliberately **not** a Terraform variable — anything
+Terraform touches ends up readable in the state file. Instead, Terraform creates the
+`SecureString` parameter `/okta-app-lambda/okta-web-client-secret` with a placeholder
+value and ignores the value from then on (`lifecycle.ignore_changes`); the Lambda reads
+it at runtime through the AWS Parameters and Secrets Lambda Extension layer. After the
+first deploy — and whenever you rotate the secret in Okta — push the real value from
+`local/export_variables.sh`:
+
+```sh
+./deploy_secrets.sh
+```
+
+The script only writes when the value actually changed, so the parameter's version
+history reflects real rotations. The extension caches reads for up to 5 minutes, so a
+rotated secret takes effect without a redeploy. Until the real value is set, browser
+sign-in fails at the token exchange (API-client bearer tokens are unaffected).
 
 ## Test
 

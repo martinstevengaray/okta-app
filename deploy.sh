@@ -14,9 +14,10 @@ source local/export_variables.sh
 # The browser OIDC flow needs a "Web Application" Okta app (OKTA_WEB_CLIENT_ID); the
 # OKTA_API_CLIENT_ID service app used by client-curl.sh cannot access /authorize.
 # Empty/unset OKTA_WEB_CLIENT_ID deploys with the browser flow disabled.
+# The web client secret is NOT passed through terraform — it lives in SSM
+# Parameter Store, pushed by ./deploy_secrets.sh (see README "Deploy").
 export TF_VAR_okta_issuer="https://${OKTA_URL_PREFIX}.okta.com/oauth2/default"
 export TF_VAR_okta_web_client_id="${OKTA_WEB_CLIENT_ID:-}"
-export TF_VAR_okta_web_client_secret="${OKTA_WEB_CLIENT_SECRET:-}"
 export TF_VAR_okta_scopes="${OKTA_SCOPES:-}"
 
 # Skipped once initialized — if the backend or providers change, delete terraform/.terraform to re-init.

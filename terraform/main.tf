@@ -6,6 +6,51 @@ locals {
   lambda_zip = "${path.module}/../build/distributions/okta-app-lambda-${var.app_version}.zip"
 }
 
+# Latest AWS Parameters and Secrets Lambda Extension layer for this region,
+# published by AWS as a public parameter (x86_64 variant).
+data "aws_ssm_parameter" "secrets_extension" {
+  name = "/aws/service/aws-parameters-and-secrets-lambda-extension/x86/latest"
+}
+
+# SecureString parameters use the account's AWS-managed SSM key.
+data "aws_kms_alias" "ssm" {
+  name = "alias/aws/ssm"
+}
+
+# Terraform owns this parameter's existence, not its value: the real client
+# secret is set out-of-band so it never enters terraform state (see README).
+#   aws ssm put-parameter --name <name> --type SecureString --overwrite --value <secret>
+resource "aws_ssm_parameter" "okta_web_client_secret" {
+  name  = "/${var.aws_lambda_function_name}/okta-web-client-secret"
+  type  = "SecureString"
+  value = "placeholder - set the real value with aws ssm put-parameter"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_iam_role_policy" "read_web_client_secret" {
+  name = "${var.aws_lambda_function_name}-read-web-client-secret"
+  role = aws_iam_role.lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "ssm:GetParameter"
+        Resource = aws_ssm_parameter.okta_web_client_secret.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = "kms:Decrypt"
+        Resource = data.aws_kms_alias.ssm.target_key_arn
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role" "lambda" {
   name = "${var.aws_lambda_function_name}-role"
 
@@ -36,13 +81,17 @@ resource "aws_lambda_function" "this" {
   memory_size = 512
   timeout     = 30
 
+  # Serves SSM parameters to the function over localhost HTTP (with caching),
+  # so the code needs no AWS SDK to read the client secret.
+  layers = [data.aws_ssm_parameter.secrets_extension.insecure_value]
+
   environment {
     variables = {
-      OKTA_ISSUER            = var.okta_issuer
-      OKTA_AUDIENCE          = var.okta_audience
-      OKTA_WEB_CLIENT_ID     = var.okta_web_client_id
-      OKTA_WEB_CLIENT_SECRET = var.okta_web_client_secret
-      OKTA_SCOPES            = var.okta_scopes
+      OKTA_ISSUER                  = var.okta_issuer
+      OKTA_AUDIENCE                = var.okta_audience
+      OKTA_WEB_CLIENT_ID           = var.okta_web_client_id
+      OKTA_WEB_CLIENT_SECRET_PARAM = aws_ssm_parameter.okta_web_client_secret.name
+      OKTA_SCOPES                  = var.okta_scopes
     }
   }
 }
