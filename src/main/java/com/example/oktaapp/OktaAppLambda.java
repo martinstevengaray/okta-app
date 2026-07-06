@@ -58,24 +58,14 @@ public class OktaAppLambda implements RequestHandler<Map<String, Object>, Map<St
     public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
         Jwt jwt;
         try {
-            String token = LambdaUtils.bearerToken(event);
-            if (token == null) {
-                token = LambdaUtils.readCookieValue(event, TOKEN_COOKIE);
-            }
-            if (token == null) {
-                throw new JwtVerificationException("missing bearer token");
-            }
-            jwt = oktaDelegate.decode(token);
+            jwt = oktaDelegate.readJwt(event);
         } catch (JwtVerificationException e) {
-            context.getLogger().log("rejected request: " + e.getMessage());
             return oktaDelegate.unauthenticated(event, context);
         }
 
         Map<String, Object> echo = new LinkedHashMap<>();
-
         Map<String, Object> requestContext = LambdaUtils.asMap(event.get("requestContext"));
         Map<String, Object> http = LambdaUtils.asMap(requestContext.get("http"));
-
         echo.put("method", http.get("method"));
         echo.put("path", http.get("path"));
         echo.put("sourceIp", http.get("sourceIp"));

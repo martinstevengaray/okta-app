@@ -2,21 +2,12 @@ package com.example.oktaapp;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class LambdaUtils {
-
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private static final String CALLBACK_PATH = "/callback";
-
-//    public static String redirectUri(Map<String, Object> event) {
-//        String domain = (String) asMap(event.get("requestContext")).get("domainName");
-//        return "https://" + domain + CALLBACK_PATH;
-//    }
 
     public static String bearerToken(Map<String, Object> event) {
         for (Map.Entry<String, Object> entry : asMap(event.get("headers")).entrySet()) {
@@ -57,7 +48,7 @@ public class LambdaUtils {
         return redacted;
     }
 
-    //html formatter
+    //html util
     public static Map<String, Object> htmlError(int statusCode, String message) {
         return response(statusCode, Map.of("content-type", "text/html; charset=utf-8"),
                 "<!DOCTYPE html><html><body><h1>Sign-in problem</h1><p>"
@@ -78,12 +69,6 @@ public class LambdaUtils {
             response.put("cookies", cookies);
         }
         return response;
-    }
-
-    public static String randomToken() {
-        byte[] bytes = new byte[24];
-        RANDOM.nextBytes(bytes);
-        return base64Url(bytes);
     }
 
     public static String base64Url(byte[] bytes) {
