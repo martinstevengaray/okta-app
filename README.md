@@ -1,15 +1,11 @@
-# AWS Lambda with Okta Webapp Authentication 
+# AWS Lambda with Okta Webapp Authentication
 ### Confidential Client OIDC Web Application with PKCE. Browser redirects to Okta login page.  
 
 # Requirements
-1) AWS account
-2) Okta account
-3) terraform
-4) aws cli
-5) java
-6) gradle
+* AWS account, Okta account  
+* java, gradle, terraform, aws cli
 
-# Setup:
+# Setup
 1) Create an S3 bucket to hold terraform state [create-tfstate-bucket.sh](https://github.com/martinstevengaray/bootstrap-utilities/blob/main/infra/create-tfstate-bucket.sh) if one does not already exist.
 2) In Okta admin dashboard create new app using: OIDC Web Application with PKCE, and assign app to user.
 3) Create new configuration script at: ./local/deployment-config.sh
@@ -18,7 +14,9 @@ export OKTA_URL_PREFIX="<your okta url prefix>"
 export OKTA_WEB_CLIENT_ID="<your okta web client id>"
 export OKTA_WEB_CLIENT_SECRET="<your okta web client secret>"
 export OKTA_SCOPES="<your okta scopes>"
-export TERRAFORM_TFSTATE_BUCKET="<your tfstate bucket>"
+export TERRAFORM_TFSTATE_S3_BUCKET="<your terraform tfstate s3 bucket>"
+export TERRAFORM_TFSTATE_S3_REGION="<your terraform tfstate s3 region>"
+export DEPLOYMENT_REGION="<your deployment region>"
 ```
 4) Deploy lambda and associated infrastructure with [deploy.sh](deploy.sh) -auto-approve
 5) Deploy secrets with [deploy-secrets.sh](deploy-secrets.sh)  

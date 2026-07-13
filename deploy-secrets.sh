@@ -7,6 +7,7 @@ cd "$(dirname "$0")"
 
 #loads:
 #  OKTA_WEB_CLIENT_SECRET
+#  DEPLOYMENT_REGION
 source local/deployment-config.sh
 
 # Must match terraform: /<aws_lambda_function_name>/okta-web-client-secret
@@ -20,6 +21,7 @@ fi
 # Terraform owns the parameter's existence; creating it here instead would make
 # the first terraform apply fail with ParameterAlreadyExists.
 if ! CURRENT=$(aws ssm get-parameter --name "$PARAM_NAME" --with-decryption \
+  --region "$DEPLOYMENT_REGION" \
   --query Parameter.Value --output text 2>/dev/null); then
   echo "Parameter $PARAM_NAME not found — run ./deploy.sh first (terraform creates it)." >&2
   exit 1
@@ -32,5 +34,6 @@ if [ "$CURRENT" = "$OKTA_WEB_CLIENT_SECRET" ]; then
 fi
 
 aws ssm put-parameter --name "$PARAM_NAME" --type SecureString --overwrite \
+  --region "$DEPLOYMENT_REGION" \
   --value "$OKTA_WEB_CLIENT_SECRET" > /dev/null
 echo "$PARAM_NAME updated."
