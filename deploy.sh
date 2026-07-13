@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 #build lambda zip and then deploy infrastructure via terraform
-
 set -euo pipefail
 cd "$(dirname "$0")"
 

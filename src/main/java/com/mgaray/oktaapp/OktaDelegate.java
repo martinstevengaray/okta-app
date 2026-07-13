@@ -23,7 +23,7 @@ import java.util.Map;
 public class OktaDelegate {
 
     private static final String OKTA_TOKEN_COOKIE = "okta_token";
-    private static final String OATH_STATE_COOKIE = "oauth_state";
+    private static final String OAUTH_STATE_COOKIE = "oauth_state";
     private static final String CALLBACK_PATH = "/callback";
 
     private final String oktaIssuer;
@@ -62,7 +62,7 @@ public class OktaDelegate {
         return verifier.decode(token);
     }
 
-    public Map<String, Object> authenticationRedirects(Map<String, Object> event, Context context) {
+    public Map<String, Object> handleAuthentication(Map<String, Object> event, Context context) {
         String path = JsonUtils.getNestedField(event, "requestContext", "http", "path");
         if (!CALLBACK_PATH.equals(path)) {
             return redirectToOkta(event, path);
@@ -92,7 +92,7 @@ public class OktaDelegate {
                 + "&code_challenge=" + codeChallenge
                 + "&code_challenge_method=S256";
         return HttpUtils.response(302, Map.of("location", authorizeUrl), "",
-                List.of(OATH_STATE_COOKIE + "=" + state + "." + codeVerifier + "." + original
+                List.of(OAUTH_STATE_COOKIE + "=" + state + "." + codeVerifier + "." + original
                         + "; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=300"));
     }
 
@@ -106,12 +106,12 @@ public class OktaDelegate {
         }
         final String code = JsonUtils.getNestedField(event, "queryStringParameters", "code");
         final String state = JsonUtils.getNestedField(event, "queryStringParameters", "state");
-        final String oathStateCookie = HttpUtils.readCookieValue(event, OATH_STATE_COOKIE);
-        if (code == null || state == null || oathStateCookie == null || !oathStateCookie.startsWith(state + ".")) {
+        final String oauthStateCookie = HttpUtils.readCookieValue(event, OAUTH_STATE_COOKIE);
+        if (code == null || state == null || oauthStateCookie == null || !oauthStateCookie.startsWith(state + ".")) {
             return HttpUtils.htmlError(400, "Login state mismatch, retry.");
         }
         // Cookie layout: state.codeVerifier.original (all base64url, so dot-safe).
-        String[] cookieParts = oathStateCookie.split("\\.", 3);
+        String[] cookieParts = oauthStateCookie.split("\\.", 3);
         if (cookieParts.length != 3) {
             return HttpUtils.htmlError(400, "Login state mismatch, retry.");
         }
@@ -153,7 +153,7 @@ public class OktaDelegate {
         Integer maxAge =  JsonUtils.getNestedField(response.body(), "expires_in");
         return HttpUtils.response(302, Map.of("location", originallyRequestedUrl), "", List.of(
                 OKTA_TOKEN_COOKIE + "=" + accessToken + "; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=" + maxAge,
-                OATH_STATE_COOKIE + "=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0")); //clear out oath cookie
+                OAUTH_STATE_COOKIE + "=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0")); //clear out oauth cookie
     }
 
     private String readBearerToken(Map<String, Object> event) {

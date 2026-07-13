@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-
 #curl script to exercise api bearer token for machine to machine access
+set -euo pipefail
 
 #load:
+#  OKTA_URL_PREFIX
+#  OKTA_SCOPES
 #  OKTA_API_CLIENT_ID
 #  OKTA_API_CLIENT_SECRET
 #  AWS_LAMBDA_URL

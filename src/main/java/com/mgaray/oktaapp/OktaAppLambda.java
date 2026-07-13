@@ -32,7 +32,7 @@ public class OktaAppLambda implements RequestHandler<Map<String, Object>, Map<St
             jwt = oktaDelegate.readJwt(event);
             return createSuccessResponse(event, jwt, context);
         } catch (JwtVerificationException e) {
-            return oktaDelegate.authenticationRedirects(event, context);
+            return oktaDelegate.handleAuthentication(event, context);
         }
     }
 
